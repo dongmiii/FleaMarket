@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fleamarket.mapper.AuthMapper">
+	
+	<insert id="insert">
+		insert into memberauth(userid, auth) values(#{userid}, #{auth})
+	</insert>
+	
+	<select id="read" resultType="com.fleamarket.domain.AuthVO">
+		select * from memberauth where userid=#{userid}
+	</select>
+	
+	<delete id="delete">
+		delete from memberauth where userid=#{userid}
+	</delete>
+	
+	<update id="update">
+		update memberauth set auth=#{auth} where userid=#{userid}
+	</update>
+	
+</mapper>

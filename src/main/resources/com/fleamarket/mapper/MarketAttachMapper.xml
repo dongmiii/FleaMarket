@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fleamarket.mapper.MarketAttachMapper">
+	
+	<insert id="insert">
+		insert into market_attach(uuid, uploadpath, imagename, sort, mno)
+		values(#{uuid}, #{uploadPath}, #{imageName}, #{sort}, #{mno})
+	</insert>
+	
+	<delete id="delete">
+		delete from market_attach where uuid=#{uuid}
+	</delete>
+	
+	<select id="findByMno" resultType="com.fleamarket.domain.MarketAttachVO">
+		select * from market_attach where mno=#{mno}
+	</select>
+	
+	<delete id="deleteAll">
+		delete from market_attach where mno = #{mno}
+	</delete>
+	
+	<select id="getOldFiles" resultType="com.fleamarket.domain.MarketAttachVO">
+		select * from market_attach where uploadpath = to_char(sysdate-1,'yyyy\mm\dd')
+	</select>
+	
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

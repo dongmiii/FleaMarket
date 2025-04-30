@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fleamarket.mapper.MemberMapper">
+	
+	<resultMap id="memberMap" type="com.fleamarket.domain.MemberVO">
+		<id property="userid" column="userid"/> 
+		<result property="userid" column="userid"/>
+		<result property="userpw" column="userpw"/>
+		<result property="userName" column="username"/>
+		<result property="gender" column="gender"/>
+		<result property="idenNum" column="idennum"/>
+		<result property="phoneNum" column="phonenum"/>
+		<result property="regDate" column="regdate"/>
+		<result property="updateDate" column="updatedate"/>
+		<result property="enabled" column="enabled"/>
+		<collection property="authList" resultMap="authMap"></collection>
+	</resultMap>
+	
+	<resultMap type="com.fleamarket.domain.AuthVO" id="authMap">
+		<result property="userid" column="userid"/>
+		<result property="auth" column="auth"/>
+	</resultMap>
+	
+	<!-- 1대다관계라 -->
+	<select id="readWithAuth" resultMap="memberMap">
+		select mem.USERID, USERPW, USERNAME, GENDER, IDENNUM, PHONENUM, ENABLED, REGDATE, UPDATEDATE, AUTH
+		from MEMBER mem LEFT OUTER JOIN MEMBERAUTH auth on mem.USERID=auth.USERID
+		where mem.USERID=#{userid}
+	</select>
+	
+	<insert id="insert">
+		insert into member(userid, userpw, username, gender, idennum, phonenum)
+		values(#{userid}, #{userpw}, #{userName}, #{gender}, #{idenNum}, #{phoneNum})
+	</insert>
+	
+	<delete id="delete">
+		delete from member where userid=#{userid}
+	</delete>
+	
+	<update id="update">
+		update member 
+		set userpw=#{userpw}, username=#{userName}, phonenum=#{phoneNum}, updatedate=sysdate 
+		where userid=#{userid}
+	</update>
+	
+	<select id="read" resultType="com.fleamarket.domain.MemberVO">
+		select * from member where userid=#{userid}
+	</select>
+	
+	<select id="getCount" resultType="int">
+		select count(*) from member where userid=#{userid}
+	</select>
+	
+	<select id="getTotalCount" resultType="int">
+		select count(*) from member
+	</select>
+	
+	<select id="getMemberListWithPaging" resultType="com.fleamarket.domain.MemberVO">
+	<![CDATA[
+		select userid, username, gender, idennum, phonenum, regdate, updatedate 
+		from 
+			(
+				select /*+INDEX_DESC(MARKET SYS_C008364) */
+					rownum rn, userid, username, gender, idennum, phonenum, regdate, updatedate 
+				from member
+				where rownum <= #{pageNum} * #{amount}
+			)
+		where rn > (#{pageNum}-1) * #{amount}
+		
+	]]>
+	</select>
+	
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	<mapper namespace="com.fleamarket.mapper.NoticeMapper">
+	  	<select id="readNoticeList" resultType="com.fleamarket.domain.NoticeVO">
+			SELECT no,
+				   title,
+				   updatedate, 
+				   writer,
+				   hits
+			  FROM notice
+			  ORDER BY no DESC 
+			<!-- <where>
+				<if test="WRITER != null and WRITER != ''">
+			 WHERE writer = #{WRITER}
+				</if>
+			</where> -->
+			 
+	  	</select>
+	  	
+	  	<select id="readNoticeContent" resultType="com.fleamarket.domain.NoticeVO">
+		SELECT no,
+			   title,
+			   content,
+			   updatedate, 
+			   writer,
+			   hits
+		  FROM notice 
+		<where>
+		   AND no = #{NO}
+		</where>
+		ORDER BY no DESC
+  	</select>
+  	
+  	<insert id="insertNotice">
+  		insert into notice(no, title , content , updatedate , writer , hits)
+  		values(seq_notice.nextval , #{title} , #{content} , sysdate , #{writer} ,0)
+  	</insert>
+  	
+  	<update id="updateNotice">
+  		UPDATE notice
+  		set title=#{title} , content=#{content} , updatedate=sysdate
+  		where no=#{no}
+  	</update>
+  	
+  	<delete id="deleteNotice">
+  		delete from notice where no=#{no}
+  	</delete>
+  	
+  	<update id="count_hits">
+  		update notice 
+  		set hits = hits+1 where no=#{no}
+  	</update>
+  	
+  	<select id="getListWithPaging" resultType="com.fleamarket.domain.NoticeVO">
+  		<![CDATA[
+  			select no, title , content , updatedate , writer , hits
+  			from 
+  				(
+	  				select /*+INDEX_DESC(notice SYS_C008620) */
+	  				rownum rn, no , title , content , updatedate , writer , hits
+	  				from notice
+	  				where rownum <= #{pageNum} * #{amount}
+  				)
+  			where rn > (#{pageNum}-1) * #{amount}
+  		]]>
+  	</select>
+  	
+  	<select id="getTotal" resultType="int">
+  	
+  		select count(*) from notice where no >0
+  	</select>
+  	
+	</mapper>

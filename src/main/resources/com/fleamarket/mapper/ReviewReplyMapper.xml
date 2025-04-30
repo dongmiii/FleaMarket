@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fleamarket.mapper.ReviewReplyMapper">
+	
+	<delete id="delete">
+		delete from review_reply where replyno = #{replyNo}
+	</delete>
+	
+	<delete id="deleteAll">
+		delete from review_reply where reviewno = #{reviewNo}
+	</delete>
+	
+	<update id="update">
+		update review_reply set reply=#{reply}, updatedate=sysdate where replyno=#{replyNo}
+	</update>
+	
+	
+	<select id="read" resultType="com.fleamarket.domain.ReviewReplyVO">
+		select * from review_reply where replyno=#{replyNo}
+	</select>
+	
+	<insert id="insertSelectKey">
+		<selectKey keyProperty="replyNo" order="BEFORE" resultType="long">
+			select seq_review_reply.nextval from dual
+		</selectKey>
+		insert into review_reply(replyno, reviewno, reply, replyer)
+		values(#{replyNo}, #{reviewNo}, #{reply}, #{replyer})
+	</insert>
+	
+	<insert id="insert">
+		insert into review_reply(replyno, reviewno, reply, replyer)
+		values(seq_review_reply.nextval, #{reviewNo}, #{reply}, #{replyer})
+	</insert>
+	
+	<select id="getListWithPaging" resultType="com.fleamarket.domain.ReviewReplyVO">
+		<![CDATA[
+			select replyno, reviewno, reply, replyer, replydate, updatedate
+			from
+				(
+					select /*+INDEX(REVIEW_REPLY IDX_REVIEW_REPLY)*/
+						rownum rn, replyno, reviewno, reply, replyer, replydate, updatedate
+						from REVIEW_REPLY
+						where reviewno=#{reviewNo} and replyno>0 and rownum <= #{cri.pageNum}*#{cri.amount}
+				)
+			where rn > (#{cri.pageNum}-1) * #{cri.amount}
+		]]>
+	</select>
+	
+	<select id="getCountByReviewNo" resultType="int">
+		<![CDATA[
+			select count(reviewno) from review_reply where reviewno=#{reviewNo}
+		]]>
+	</select>
+	
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

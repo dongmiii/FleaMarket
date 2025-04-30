@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fleamarket.mapper.MarketMapper">
+
+	<sql id="criteria">
+		<trim prefix="(" suffix=") AND " prefixOverrides="OR">
+	 		<foreach item="type" collection="typeArr">
+	 			<trim prefix="OR">
+	 				<choose>
+	 					<when test="type=='N'.toString()">
+	 						mname like '%'||#{keyword}||'%'
+	 					</when>
+	 					<when test="type=='C'.toString()">
+	 						minfo like '%'||#{keyword}||'%'
+	 					</when>
+	 					<when test="type=='L'.toString()">
+	 						mlocation like '%'||#{keyword}||'%'
+	 					</when>
+	 				</choose>
+	 			</trim>
+	 		</foreach>
+	 	</trim>
+	</sql>
+	
+	<sql id="openClause">
+		<trim suffix="AND">
+		<![CDATA[
+			mstartdate <= sysdate AND mlastdate >= sysdate
+		]]>
+		</trim>
+	</sql>
+	
+	<sql id="beforeClause">
+		<trim suffix="AND">
+		<![CDATA[
+			mstartdate >= sysdate 
+		]]>
+		</trim>
+	</sql>
+	
+
+
+	<delete id="delete">
+		delete from market where mno = #{mno}
+	</delete>
+	
+	<update id="updateMarketLikes">
+		update market set mlikes = #{mLikes} where mno=#{mno}
+	</update>
+
+	<update id="update">
+		update market set mname=#{mName}, minfo=#{mInfo}, mstartdate=#{mStartDate}, mlastdate=#{mLastDate},
+			mlocation=#{mLocation},memail=#{mEmail}, mphone=#{mPhone}, mexp=#{mExp}, mcategory=#{mCategory}
+		where mno=#{mno}
+	</update>
+	
+	<update id="updateMarketRejectReason">
+		update market set reject = #{reject}
+		where mno=#{mno}
+	</update>
+	
+	
+	<select id="getListWithPaging" resultType="com.fleamarket.domain.MarketVO">
+		<![CDATA[
+			select mno, mname, minfo, mstartdate, mlastdate, mlocation, memail, mphone, mexp, 
+					mcategory, mlikes, orgname, mpermit, mrequestdate, mregistdate
+			from 
+				(
+		]]>
+			<choose>
+				 <when test="type=='R'.toString()">
+				 	select /*+INDEX_ASC(MARKET IDX_MARKET_RANKING) */
+				 </when>
+				 <when test="type!='R'.toString()">
+					select /*+INDEX_DESC(MARKET PK_MARKET_MNO) */
+				 </when>
+			</choose>	 
+		<![CDATA[
+						rownum rn, mno, mname, minfo, mstartdate, mlastdate, mlocation, memail, mphone, mexp,
+						mcategory, mlikes, orgname, mpermit, mrequestdate, mregistdate
+					from market
+					where 
+		]]>	
+		<if test="type!='R'.toString()">	
+			<include refid="criteria"></include>
+		</if>
+		<if test="type=='O'.toString()">	
+			<include refid="openClause"></include>
+		</if>
+		<if test="type=='B'.toString()">	
+			<include refid="beforeClause"></include>
+		</if>
+		<![CDATA[			
+					mpermit='허락' and rownum <= #{pageNum} * #{amount} 
+				)
+			where rn > (#{pageNum}-1) * #{amount}
+		]]>
+	</select>
+	
+	
+	<select id="getListWithRanking" resultType="com.fleamarket.domain.MarketVO">
+		<![CDATA[
+			select mno, mname, minfo, mstartdate, mlastdate, mlocation, memail, mphone, mexp, 
+					mcategory, mlikes, orgname, mpermit, mrequestdate, mregistdate
+			from
+				(
+					select /*+INDEX_ASC(MARKET IDX_MARKET_RANKING) */
+						rownum rn, mno, mname, minfo, mstartdate, mlastdate, mlocation, memail, mphone, mexp,
+						mcategory, mlikes, orgname, mpermit, mrequestdate, mregistdate
+					from market
+					where mpermit='허락' and rownum <= #{pageNum} * #{amount} 	
+				)
+			where rn > (#{pageNum}-1) * #{amount}
+		]]>
+	</select>
+	
+	<select id="getList" resultType="com.fleamarket.domain.MarketVO">
+		<![CDATA[
+			select * 
+			from 
+				(
+					select * 
+					from market
+					where mlastdate between to_char(sysdate,'yyyy-MM-dd') and to_char(sysdate+14,'yyyy-MM-dd') and mpermit='허락' 
+				) 
+			where rownum <= 5 
+		]]>
+	</select>
+
+	<select id="read" resultType="com.fleamarket.domain.MarketVO">
+		select * from market where mno = #{mno}
+	</select>
+	
+	<insert id="insertSelectKey">
+		<selectKey keyProperty="mno" order="BEFORE" resultType="long">
+			select seq_market.nextval from dual
+		</selectKey>
+		insert into market(mno, mname, orgname, memail, minfo, mstartdate, mlastdate, mlocation, mphone, mexp, mcategory, mlikes, userid) 
+		values(#{mno}, #{mName}, #{orgName}, #{mEmail}, #{mInfo}, #{mStartDate}, #{mLastDate}, #{mLocation}, #{mPhone}, #{mExp}, #{mCategory}, #{mLikes},#{userId})
+	</insert>
+	
+	<update id="updatePermit">
+		update market set mpermit=#{mPermit} where mno=#{mno}
+	</update>
+	
+	<update id="updateRegistDate">
+		update market set mregistdate = sysdate where mno=#{mno}
+	</update>
+	
+	<select id="getMarketCount" resultType="int">
+		select count(*) from market where
+		<include refid="criteria"></include>
+		<if test="type=='O'.toString()">
+			<include refid="openClause"></include>
+		</if>
+		<if test="type=='B'.toString()">	
+			<include refid="beforeClause"></include>
+		</if>
+		mno>0
+	</select>
+	
+	<select id="getMarketCountWithoutParameter" resultType="int">
+		select count(*) from market where mno>0
+	</select>
+	
+	<select id="getMarketCountWithUserId" resultType="int">
+		select count(*) from market where userid=#{userId}
+	</select>
+	
+	<select id="getListWithCriPaging" resultType="com.fleamarket.domain.MarketVO">
+		<![CDATA[
+			select mno, mname, minfo, mstartdate, mlastdate, mlocation, memail, mphone, mexp, 
+					mcategory, mlikes, orgname, mpermit, mrequestdate, mregistdate
+			from
+				(
+					select /*+INDEX_DESC(MARKET PK_MARKET_MNO) */
+						rownum rn, mno, mname, minfo, mstartdate, mlastdate, mlocation, memail, mphone, mexp,
+						mcategory, mlikes, orgname, mpermit, mrequestdate, mregistdate
+					from market
+					where rownum <= #{pageNum} * #{amount} 	
+				)
+			where rn > (#{pageNum}-1) * #{amount}
+		]]>
+	</select>
+	
+	<select id="getListWithUserid" resultType="com.fleamarket.domain.MarketVO">
+		<![CDATA[
+			select mno, mname, minfo, mstartdate, mlastdate, mlocation, memail, mphone, mexp, 
+					mcategory, mlikes, orgname, mpermit, mrequestdate, mregistdate
+			from
+				(
+					select /*+INDEX_DESC(MARKET PK_MARKET_MNO) */
+						rownum rn, mno, mname, minfo, mstartdate, mlastdate, mlocation, memail, mphone, mexp,
+						mcategory, mlikes, orgname, mpermit, mrequestdate, mregistdate
+					from market
+					where rownum <= #{pageNum} * #{amount} 	and userid=#{userId}
+				)
+			where rn > (#{pageNum}-1) * #{amount}
+		]]>
+	</select>
+	
+	
+	
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

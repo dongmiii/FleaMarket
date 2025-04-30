@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fleamarket.mapper.ReviewMapper">
+
+	<select id="getList" resultType="com.fleamarket.domain.ReviewVO">
+		<![CDATA[
+			select reviewno, title, content, writer, regdate, updatedate, views, mlikes, mno
+			from 
+				(
+					select /*+INDEX_DESC(REVIEW PK_REVIEWNO) */
+						rownum rn, reviewno, title, content, writer, regdate, updatedate, views, mlikes, mno
+					from review
+					where rownum <= #{pageNum} * #{amount}
+				)
+			where rn > (#{pageNum}-1) * #{amount}
+		]]>
+	</select>
+
+	<insert id="insertSelectKey">
+		<selectKey keyProperty="reviewNo" order="BEFORE" resultType="long">
+			select seq_review.nextval from dual
+		</selectKey>
+		insert into review(reviewno, title, content, writer, mlikes, mno) 
+		values(#{reviewNo}, #{title}, #{content}, #{writer}, #{mLikes}, #{mno})
+	</insert>
+	
+	<select id="read" resultType="com.fleamarket.domain.ReviewVO">
+		select * from review where reviewno = #{reviewNo}
+	</select>
+	
+	<delete id="delete">
+	 	delete from review where reviewno = #{reviewNo}
+	</delete>
+	 
+	<update id="update">
+		update review set title=#{title}, content=#{content}, updatedate=sysdate where reviewno=#{reviewNo}
+	</update>
+	 
+	<select id="getTotalCount" resultType="int">
+	 	select count(*) from review where reviewno > 0
+	</select>
+	
+	<update id="updateViews">
+		update review set views=views+1 where reviewno=#{reviewNo}
+	</update>
+	
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
